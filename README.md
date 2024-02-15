@@ -19,7 +19,7 @@ source bunka-front-env/bin/activate # activate the env
 ## Install bunkatopics
 
 ```bash
-pip -q install bunkatopics --upgrade # install the last version in a quiet mode
+pip -q install git+https://github.com/charlesdedampierre/BunkaTopics.git@dev --upgrade # Install the dev version of Bunkatopics
 pip install ipywidgets
 ```
 
