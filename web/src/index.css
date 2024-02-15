@@ -73,7 +73,7 @@ svg {
 }
 
 .scatter-plot-container svg {
-  background-color: #f7f7f7;
+  background-color: #9bdbfb;
   border: 1px solid #ddd;
   cursor: grab;
 }
@@ -106,7 +106,9 @@ h2 {
 .text-container p {
   margin: 10px;
   padding: 2px 0;
+
 }
+
 
 /* Style for the scatter plot circles */
 circle {

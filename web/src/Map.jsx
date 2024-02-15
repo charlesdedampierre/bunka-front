@@ -15,7 +15,7 @@ import QueryView from "./QueryView";
 
 const bunkaDocs = "bunka_docs.json";
 const bunkaTopics = "bunka_topics.json";
-const { REACT_APP_API_ENDPOINT } = process.env;
+const { REACT_APP_API_ENDPOINT } = "local";
 
 /**
  * Generic tooltip
@@ -83,19 +83,6 @@ function MapView() {
       });
     svg.call(zoom);
 
-    /**
-     * Initial zoom.
-     */
-    // const defaultTransform = { k: 1 };
-    // const initialTransform = defaultTransform?.k != null
-    //   ? new ZoomTransform(
-    //     defaultTransform.k ?? 1,
-    //     defaultTransform.x ?? 0,
-    //     defaultTransform.y ?? 0
-    //   )
-    //   : d3.zoomIdentity;
-    // svg.call(zoom.transform, initialTransform);
-
     const xMin = d3.min(data, (d) => d.x);
     const xMax = d3.max(data, (d) => d.x);
     const yMin = d3.min(data, (d) => d.y);
@@ -117,10 +104,15 @@ function MapView() {
       .x((d) => xScale(d.x))
       .y((d) => yScale(d.y))
       .size([plotWidth, plotHeight])
-      .bandwidth(30)(
+      .bandwidth(5)(
         // Adjust the bandwidth as needed
         data,
       );
+
+    // Define a color scale for the contours to add visual depth and appeal
+    const colorScale = d3.scaleSequential(d3.interpolateTurbo) // Using d3.interpolateTurbo for vibrant colors
+      .domain([0, d3.max(contourData, d => d.value)]); // Dynamically set the domain based on data density
+
 
     // Define a custom color for the contour lines
 
@@ -134,26 +126,11 @@ function MapView() {
       .append("path")
       .attr("class", "contour")
       .attr("d", d3.geoPath())
-      .style("fill", "none")
+      .style("fill", "lightgreen")
+      .attr("fill", d => colorScale(d.value)) // Apply color based on data density
+
       .style("stroke", contourLineColor) // Set the contour line color to the custom color
       .style("stroke-width", 1);
-
-    /*
-    const circles = svg.selectAll('circle')
-    .data(data)
-    .enter()
-    .append('circle')
-    .attr('cx', (d) => xScale(d.x))
-    .attr('cy', (d) => yScale(d.y))
-    .attr('r', 5)
-    .style('fill', 'lightblue')
-    .on('click', (event, d) => {
-        // Show the content and topic name of the clicked point in the text container
-        setSelectedDocument(d);
-        // Change the color to pink on click
-        circles.style('fill', (pointData) => (pointData === d) ? 'pink' : 'lightblue');
-    });
-    */
 
     const centroids = data.filter((d) => d.x_centroid && d.y_centroid);
     setTopicsCentroids(centroids);
@@ -175,17 +152,50 @@ function MapView() {
         setSelectedDocument(d);
       });
 
+
+
     // Add text labels for topic names
     g
-      .selectAll("text.topic-label")
+      .selectAll("rect.topic-label-background")
+      .data(centroids)
+      .enter()
+      .append("rect")
+      .attr("class", "topic-label-background")
+      .attr("x", (d) => {
+        // Calculate the width of the text
+        const first10Words = d.name.split(' ').slice(0, 8).join(' ');
+        const textLength = first10Words.length * 8; // Adjust the multiplier for width as needed
+
+        // Calculate the x position to center the box
+        return xScale(d.x_centroid) - textLength / 2;
+      }) // Center the box horizontally
+      .attr("y", (d) => yScale(d.y_centroid) - 20) // Adjust the y position
+      .attr("width", (d) => {
+        // Compute the width based on the text's length
+        const first10Words = d.name.split(' ').slice(0, 8).join(' ');
+        const textLength = first10Words.length * 8; // Adjust the multiplier for width as needed
+        return textLength;
+      })
+      .attr("height", 30) // Set the height of the white box
+      .style("fill", "white") // Set the white fill color
+      .style("stroke", "grey") // Set the blue border color
+      .style("stroke-width", 2); // Set the border width
+
+    // Add text labels in black within the white boxes
+    g
+      .selectAll("text.topic-label-text")
       .data(centroids)
       .enter()
       .append("text")
-      .attr("class", "topic-label")
+      .attr("class", "topic-label-text")
       .attr("x", (d) => xScale(d.x_centroid))
-      .attr("y", (d) => yScale(d.y_centroid) - 12) // Adjust the vertical position
-      .text((d) => d.name) // Use the 'name' property for topic names
-      .style("text-anchor", "middle"); // Center-align the text
+      .attr("y", (d) => yScale(d.y_centroid) + 4) // Adjust the vertical position
+      .text((d) => {
+        const first10Words = d.name.split(' ').slice(0, 8).join(' ');
+        return first10Words;
+      }) // Use the first 10 words
+      .style("text-anchor", "middle") // Center-align the text
+      .style("fill", "black"); // Set the text color
 
     const convexHullData = data.filter((d) => d.convex_hull);
 
@@ -221,6 +231,13 @@ function MapView() {
 
     let currentlyClickedPolygon = null;
 
+    function clickFirstPolygon() {
+      // Simulate a click event on the first polygon
+      const firstPolygon = d3.select(topicsPolygons.nodes()[0]);
+      firstPolygon.node().dispatchEvent(new Event("click"));
+    }
+
+
     topicsPolygons.on("click", (event, d) => {
       // Reset the fill color of the previously clicked polygon to transparent light grey
       if (currentlyClickedPolygon !== null) {
@@ -235,12 +252,16 @@ function MapView() {
 
       currentlyClickedPolygon = clickedPolygon;
 
+
       // Display the topic name and content from top_doc_content with a scroll system
       if (d.top_doc_content) {
         // Render the TextContainer component with topic details
         setSelectedDocument(d);
       }
     });
+
+    clickFirstPolygon();
+
   };
 
   useEffect(() => {
@@ -326,6 +347,7 @@ function MapView() {
               null
             )}
           </div>
+
         </div>
       )}
     </div>

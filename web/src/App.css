@@ -37,3 +37,22 @@
     transform: rotate(360deg);
   }
 }
+
+.scatter-plot-and-text-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.scatter-plot-container {
+  flex: 1;
+  /* This makes it flexible and takes remaining space */
+  /* Add some margin to push it down slightly */
+  /* Add other styling for scatter-plot-container as needed */
+}
+
+.text-container {
+  flex: 1;
+  /* This makes it flexible and takes remaining space */
+  /* Add other styling for text-container as needed */
+}

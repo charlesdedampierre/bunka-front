@@ -1,3 +1,15 @@
+---
+title: French PD Book Visualization
+emoji: 📖
+colorFrom: green
+colorTo: yellow
+sdk: docker
+pinned: false
+app_port: 3000
+---
+
+
+
 # BunkaTopics web app
 
 This project was made to show the results of [BunkaTopics](https://github.com/charlesdedampierre/BunkaTopics).
